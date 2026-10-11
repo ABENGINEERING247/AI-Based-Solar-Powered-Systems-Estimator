@@ -13,8 +13,6 @@ st.set_page_config(
 )
 
 # --- Define AHMAD the Little Boy Character URL (Animated Avatar) ---
-# This is a public URL for a placeholder animated character (a little boy with glasses).
-# For production, you could host your own optimized Lottie or GIF file.
 AHMAD_AVATAR_URL = "https://raw.githubusercontent.com/ai-driven-dev/assets/main/animated_boy_avatar.gif"
 
 # --- Advanced Custom Styling (CSS & Background) ---
@@ -72,14 +70,14 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# --- WELCOME POPUP FOR VISITORS ---
-@st.experimental_dialog("☀️ Welcome to SolarAI Estimator!")
+# --- WELCOME POPUP FOR VISITORS (Using st.dialog) ---
+@st.dialog("☀️ Welcome to SolarAI Estimator!")
 def welcome_popup():
     col1, col2 = st.columns([1, 2])
     with col1:
         st.image(AHMAD_AVATAR_URL, use_container_width=True)
     with col2:
-        st.markdown(f"""
+        st.markdown("""
             ### Hello! I'm Ahmad! 👋
 
             I'm your little AI assistant, and I love solar power! I've been animated just for you.
@@ -87,10 +85,10 @@ def welcome_popup():
             I am here to help you calculate **exactly** what you need for your perfect solar energy system.
 
             **In this app, we will figure out:**
-            1.  How many solar panels you need ☀️
-            2.  The best inverter for your load ⚡
-            3.  The right battery bank 🔋
-            4.  And exactly **which cables** are required for safety! 🛠️
+            1. How many solar panels you need ☀️
+            2. The best inverter for your load ⚡
+            3. The right battery bank 🔋
+            4. And exactly **which cables** are required for safety! 🛠️
 
             Let's build something green together! Please close this popup to start.
         """)
@@ -123,7 +121,7 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-    # 2. System Parameters (Simplified)
+    # 2. System Parameters
     st.markdown("## ⚙️ System Inputs")
     st.markdown("Set your main operating parameters below.")
 
@@ -165,7 +163,6 @@ with tab_calculator:
 
     # Perform Calculations
     if not edited_loads.empty:
-        # Avoid issues if users input 0
         df = edited_loads.copy()
         df["Quantity"] = pd.to_numeric(df["Quantity"]).fillna(0)
         df["Watts Each"] = pd.to_numeric(df["Watts Each"]).fillna(0)
@@ -179,27 +176,19 @@ with tab_calculator:
         total_daily_kwh = total_daily_wh / 1000.0
 
         # --- Sizing Calculations ---
-        
-        # 1. Inverter Sizing (with 25% safety margin & surge consideration)
         recommended_inverter_kw = (max_surge_load * 1.25) / 1000.0
 
-        # 2. Solar Panel Sizing (accounting for 20% system losses)
-        daily_generation_factor = peak_sun_hours * 0.80 # 80% system efficiency factor
+        daily_generation_factor = peak_sun_hours * 0.80
         total_panel_watts_required = total_daily_wh / daily_generation_factor if daily_generation_factor > 0 else 0
         num_panels = int(np.ceil(total_panel_watts_required / panel_wattage))
         actual_installed_capacity_w = num_panels * panel_wattage
 
-        # 3. Battery Bank Sizing (LiFePO4 focus at 48V+, Lead Acid below)
-        dod = 0.80 if system_voltage >= 48 else 0.50 # Higher depth of discharge for modern/higher voltage systems
+        dod = 0.80 if system_voltage >= 48 else 0.50
         total_battery_wh = (total_daily_wh * autonomy_days) / dod
         battery_amp_hours = total_battery_wh / system_voltage
 
-        # 4. Cable Sizing Calculation (DC Side, Panel Array to Inverter)
-        # Assuming typical Voc of panels in series, here we calculate Max DC Current (Imp)
-        # Approximation: Current = Array Watts / nominal DC voltage (simplified)
         max_dc_current = actual_installed_capacity_w / system_voltage if system_voltage > 0 else 0
         
-        # Comprehensive Cable Recommendation Logic (simplified heuristics)
         if max_dc_current <= 12:
             cable_size = "4 mm² (AWG 12)"
             cable_type = "Standard PV Solar Cable"
@@ -219,30 +208,26 @@ with tab_calculator:
         st.markdown("---")
         st.markdown("### 📌 Step 2: Ahmad's System Recommendations")
 
-        # Metric Visuals
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric(label="Total Connected Load", value=f"{max_surge_load:,.0f} W", help="Sum of all appliance wattage running simultaneously.")
+            st.metric(label="Total Connected Load", value=f"{max_surge_load:,.0f} W")
         with col2:
-            st.metric(label="Daily Energy Used", value=f"{total_daily_kwh:.2f} kWh", help="Total energy consumed per 24 hours.")
+            st.metric(label="Daily Energy Used", value=f"{total_daily_kwh:.2f} kWh")
         with col3:
-            st.metric(label="Solar Panels Required", value=f"{num_panels} Units", delta=f"{actual_installed_capacity_w/1000:.1f} kW Total Array", help=f"Using {panel_wattage}W panels.")
+            st.metric(label="Solar Panels Required", value=f"{num_panels} Units", delta=f"{actual_installed_capacity_w/1000:.1f} kW Total Array")
         with col4:
-            st.metric(label="Recommended Inverter", value=f"{max(1.0, recommended_inverter_kw):.1f} kW", help="Sized 25% above peak load.")
+            st.metric(label="Recommended Inverter", value=f"{max(1.0, recommended_inverter_kw):.1f} kW")
 
         st.markdown("---")
         st.markdown("#### 🔋 Battery & 🛠️ Wiring Specifications")
         col5, col6, col7 = st.columns(3)
         with col5:
-            st.metric(label="Battery Bank Capacity", value=f"{battery_amp_hours:.0f} Ah @ {system_voltage}V", help=f"Sized for {autonomy_days} days backup with {dod*100}% DoD.")
+            st.metric(label="Battery Bank Capacity", value=f"{battery_amp_hours:.0f} Ah @ {system_voltage}V")
         with col6:
-            st.metric(label="Estimated Max DC Current", value=f"{max_dc_current:.1f} A", help="Maximum expected current from solar array to inverter.")
+            st.metric(label="Estimated Max DC Current", value=f"{max_dc_current:.1f} A")
         with col7:
-            # Highlight Cable Recommendation
             st.success(f"**Recommended DC Cable:**  \n### {cable_size}  \nType: {cable_type} (Length: {cable_length}m)")
 
-
-        # Success Popup simulation
         if st.button("🚀 Finalize & Run Ahmad's AI Validation", type="primary"):
             with st.spinner("Ahmad is double-checking the figures..."):
                 time.sleep(1.5)
@@ -264,7 +249,7 @@ with tab_visualization:
                 names="Appliance", 
                 values="Daily Watt-Hours",
                 hole=0.4,
-                color_discrete_sequence=px.colors.sequential.YlOrRd_r # Solar colors
+                color_discrete_sequence=px.colors.sequential.YlOrRd_r
             )
             fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0))
             st.plotly_chart(fig_pie, use_container_width=True)
@@ -291,13 +276,11 @@ with tab_chat:
     st.markdown("### 🤖 Chat with Ahmad (Animated AI Assistant)")
     st.markdown(f"Ask me questions! Tell me what appliances you use, or ask why I recommended **{cable_size if 'cable_size' in locals() else 'certain cables'}**!")
 
-    # Display Chat History
     for message in st.session_state.messages:
         avatar = AHMAD_AVATAR_URL if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
-    # Chat Input
     if prompt := st.chat_input("Ask Ahmad about solar panels, batteries, or wiring..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -305,9 +288,8 @@ with tab_chat:
 
         with st.chat_message("assistant", avatar=AHMAD_AVATAR_URL):
             with st.spinner("Ahmad is calculating and formulating advice..."):
-                time.sleep(1) # Simulated response delay
+                time.sleep(1)
                 
-                # Context-aware intelligent responses
                 lower_prompt = prompt.lower()
                 if "battery" in lower_prompt:
                     response = "I love batteries! For higher voltage systems like your 48V setup, **LiFePO4 (Lithium)** is much better than Lead-Acid. You can use 80% of their energy, and they last 10 times longer! I recommend them for reliability."
