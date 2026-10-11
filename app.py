@@ -12,91 +12,112 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Define AHMAD the Little Boy Character URL (Animated Avatar) ---
-AHMAD_AVATAR_URL = "https://raw.githubusercontent.com/ai-driven-dev/assets/main/animated_boy_avatar.gif"
-
 # --- Advanced Custom Styling (CSS & Background) ---
-st.markdown(f"""
+st.markdown("""
     <style>
-    /* Main App Background - Stylized Solar Panels Over Gradient */
-    .stApp {{
-        background: 
-            linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.90) 100%),
-            url('https://raw.githubusercontent.com/ai-driven-dev/assets/main/solar_bg_pattern.webp');
-        background-size: cover;
+    /* Main App Background - Stylized Gradient */
+    .stApp {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.90) 100%);
         background-attachment: fixed;
-    }}
+    }
 
-    .main-header {{
-        font-size: 2.8rem;
-        color: #FF8C00; /* Solar Orange */
+    /* Top Banner Header */
+    .app-header-banner {
+        background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+        padding: 25px 30px;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        margin-bottom: 25px;
+        box-shadow: 0 6px 20px rgba(255, 140, 0, 0.35);
+    }
+    .app-header-banner h1 {
+        margin: 0;
+        font-size: 2.6rem;
         font-weight: 800;
-        margin-bottom: 0rem;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }}
-    .sub-header {{
-        font-size: 1.2rem;
-        color: #4A5568;
-        margin-bottom: 2rem;
-    }}
+        letter-spacing: 0.5px;
+    }
+    .app-header-banner p {
+        margin: 8px 0 0 0;
+        font-size: 1.15rem;
+        opacity: 0.95;
+    }
 
-    /* Ahmad Avatar Styling in Sidebar */
-    .ahmad-sidebar-container {{
+    /* Animated CSS Avatar for Ahmad (Reliable & Interactive) */
+    .ahmad-sidebar-container {
         text-align: center;
         margin-bottom: 20px;
-        border-bottom: 1px solid #E2E8F0;
-        padding-bottom: 15px;
-    }}
-    .ahmad-avatar-img {{
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
+        border-bottom: 2px solid #E2E8F0;
+        padding-bottom: 20px;
+    }
+    .animated-avatar-box {
+        width: 110px;
+        height: 110px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
         border: 4px solid #FF8C00;
-        box-shadow: 0 4px 10px rgba(255, 140, 0, 0.3);
-    }}
-    .ahmad-label {{
-        margin-top: 10px;
-        font-weight: 700;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.2rem;
+        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+        animation: pulseAvatar 2s infinite ease-in-out;
+    }
+    @keyframes pulseAvatar {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.5); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(255, 140, 0, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+    }
+    .ahmad-label {
+        margin-top: 12px;
+        font-weight: 800;
         color: #2D3748;
-        font-size: 1.1rem;
-    }}
+        font-size: 1.2rem;
+    }
+    .ahmad-sublabel {
+        font-size: 0.85rem;
+        color: #718096;
+    }
 
     /* Global Metric Card Styling */
-    div[data-testid="stMetricValue"] {{
+    div[data-testid="stMetricValue"] {
         color: #FF8C00;
         font-weight: 700;
-    }}
+    }
     </style>
 """, unsafe_allow_html=True)
 
 
-# --- WELCOME POPUP FOR VISITORS (Using st.dialog) ---
+# --- WELCOME POPUP FOR VISITORS (st.dialog) ---
 @st.dialog("☀️ Welcome to SolarAI Estimator!")
 def welcome_popup():
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.image(AHMAD_AVATAR_URL, use_container_width=True)
+        st.markdown("""
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 5rem; animation: bounce 1.5s infinite;">👦</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
             ### Hello! I'm Ahmad! 👋
 
-            I'm your little AI assistant, and I love solar power! I've been animated just for you.
+            I'm your animated AI assistant, and I love solar energy! 
 
-            I am here to help you calculate **exactly** what you need for your perfect solar energy system.
+            I am here to help you calculate **exactly** what you need for your solar power system:
+            1. Solar panel quantity & wattage ☀️
+            2. Recommended inverter capacity ⚡
+            3. Battery bank storage & autonomy 🔋
+            4. Precise DC cable size & gauge 🛠️
 
-            **In this app, we will figure out:**
-            1. How many solar panels you need ☀️
-            2. The best inverter for your load ⚡
-            3. The right battery bank 🔋
-            4. And exactly **which cables** are required for safety! 🛠️
-
-            Let's build something green together! Please close this popup to start.
+            Let's build a sustainable setup together! Close this popup to begin.
         """)
     if st.button("Let's Get Started, Ahmad!", type="primary", use_container_width=True):
         st.session_state.welcome_shown = True
         st.rerun()
 
-# Trigger the popup once per session
+# Trigger popup once per session
 if "welcome_shown" not in st.session_state:
     st.session_state.welcome_shown = False
 
@@ -107,34 +128,38 @@ if not st.session_state.welcome_shown:
 # --- Session State Initialization for Chat History ---
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hello! I am **Ahmad**, your *little animated* solar AI assistant. Tell me about your appliances or power requirements, and I'll help you configure the ideal setup!"}
+        {"role": "assistant", "content": "Hello! I am **Ahmad**, your animated solar AI assistant. Tell me about your appliances or power requirements, and I'll help you configure the ideal setup!"}
     ]
 
 
 # --- Sidebar: AHMAD Character & Configuration ---
 with st.sidebar:
-    # 1. Display Animated Ahmad Character
-    st.markdown(f"""
+    # Animated CSS Avatar Component
+    st.markdown("""
         <div class="ahmad-sidebar-container">
-            <img src="{AHMAD_AVATAR_URL}" class="ahmad-avatar-img" alt="Animated Ahmad Boy">
-            <div class="ahmad-label">Ahmad - Your AI Assistant</div>
+            <div class="animated-avatar-box">👦</div>
+            <div class="ahmad-label">Ahmad</div>
+            <div class="ahmad-sublabel">Animated AI Solar Assistant</div>
         </div>
     """, unsafe_allow_html=True)
 
-    # 2. System Parameters
     st.markdown("## ⚙️ System Inputs")
-    st.markdown("Set your main operating parameters below.")
+    st.markdown("Set your operational parameters.")
 
     peak_sun_hours = st.slider("Peak Sun Hours (hrs/day)", min_value=3.0, max_value=8.0, value=5.5, step=0.1)
-    panel_wattage = st.selectbox("Solar Panel Rating (Watts)", [400, 540, 580, 600], index=2) # Default 580W
-    system_voltage = st.selectbox("Battery Bank Voltage (V)", [12, 24, 48, 96], index=2) # Default 48V
-    autonomy_days = st.slider("Backup Days", min_value=0.5, max_value=3.0, value=1.0, step=0.5)
+    panel_wattage = st.selectbox("Solar Panel Rating (Watts)", [400, 540, 580, 600], index=2)
+    system_voltage = st.selectbox("Battery Bank Voltage (V)", [12, 24, 48, 96], index=2)
+    autonomy_days = st.slider("Backup Days (Autonomy)", min_value=0.5, max_value=3.0, value=1.0, step=0.5)
     cable_length = st.number_input("Est. Cable Length (Panel to Inverter, m)", min_value=5, max_value=150, value=20, step=5)
 
 
-# --- Main Interface ---
-st.markdown('<p class="main-header">☀️ SolarAI Estimator & Optimizer</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Accurate load calculation, hardware sizing, cable recommendations, and animated AI assistance.</p>', unsafe_allow_html=True)
+# --- TOP HEADER BANNER ---
+st.markdown("""
+    <div class="app-header-banner">
+        <h1>☀️ SolarAI Power Systems Estimator</h1>
+        <p>AI-Powered Load Calculation, Hardware Sizing & Cable Selector | Developed by <b>Engr. Bilal Mehmood</b></p>
+    </div>
+""", unsafe_allow_html=True)
 
 # Create Tabs for Organization
 tab_calculator, tab_visualization, tab_chat = st.tabs(["⚡ Load & Hardware Calculator", "📊 Visual Summary", "🤖 Chat with Ahmad"])
@@ -144,8 +169,8 @@ tab_calculator, tab_visualization, tab_chat = st.tabs(["⚡ Load & Hardware Calc
 # TAB 1: CALCULATOR
 # ==========================================
 with tab_calculator:
-    st.markdown("### 🔌 Step 1: Define Your Daily Load")
-    st.markdown("Add your appliances to calculate exact daily energy consumption.")
+    st.markdown("### 🔌 Step 1: Define Your Daily Appliance Load")
+    st.markdown("Add, edit, or remove appliances below to calculate exact daily energy consumption.")
 
     # Default Load Profile DataFrame
     if "load_data" not in st.session_state:
@@ -157,7 +182,6 @@ with tab_calculator:
             {"Appliance": "Laptop/Charger", "Quantity": 2, "Watts Each": 90, "Hours Used/Day": 5},
         ])
 
-    # Editable DataFrame for Loads
     edited_loads = st.data_editor(st.session_state.load_data, num_rows="dynamic", use_container_width=True, key="load_editor")
     st.session_state.load_data = edited_loads
 
@@ -219,7 +243,7 @@ with tab_calculator:
             st.metric(label="Recommended Inverter", value=f"{max(1.0, recommended_inverter_kw):.1f} kW")
 
         st.markdown("---")
-        st.markdown("#### 🔋 Battery & 🛠️ Wiring Specifications")
+        st.markdown("#### 🔋 Battery Bank & 🛠️ DC Wiring Specifications")
         col5, col6, col7 = st.columns(3)
         with col5:
             st.metric(label="Battery Bank Capacity", value=f"{battery_amp_hours:.0f} Ah @ {system_voltage}V")
@@ -277,7 +301,7 @@ with tab_chat:
     st.markdown(f"Ask me questions! Tell me what appliances you use, or ask why I recommended **{cable_size if 'cable_size' in locals() else 'certain cables'}**!")
 
     for message in st.session_state.messages:
-        avatar = AHMAD_AVATAR_URL if message["role"] == "assistant" else None
+        avatar = "👦" if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
@@ -286,7 +310,7 @@ with tab_chat:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        with st.chat_message("assistant", avatar=AHMAD_AVATAR_URL):
+        with st.chat_message("assistant", avatar="👦"):
             with st.spinner("Ahmad is calculating and formulating advice..."):
                 time.sleep(1)
                 
