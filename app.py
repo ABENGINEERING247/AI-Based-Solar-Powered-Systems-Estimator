@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import time
+import io
+from docx import Document
+from fpdf import FPDF
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -97,16 +100,6 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Card Containers & Alignment */
-    .custom-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-radius: 14px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
     /* Streamlit Metric Boxes Alignment & Styling */
     div[data-testid="stMetric"] {
         background-color: #FFFFFF !important;
@@ -140,6 +133,92 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# --- REPORT GENERATION FUNCTIONS ---
+def generate_docx_report(df, total_daily_kwh, num_panels, panel_wattage, recommended_inverter_kw, battery_amp_hours, system_voltage, cable_size, cable_length):
+    doc = Document()
+    doc.add_heading('SolarAI Power Systems Estimator Report', 0)
+    doc.add_paragraph('Designed by Engr. Bilal Mehmood | Ahmad AI Assistant')
+    
+    doc.add_heading('1. Executive Summary & Hardware Sizing', level=1)
+    doc.add_paragraph(f'• Total Daily Energy Consumption: {total_daily_kwh:.2f} kWh')
+    doc.add_paragraph(f'• Solar Panels Required: {num_panels} Units ({panel_wattage}W each)')
+    doc.add_paragraph(f'• Recommended Inverter Capacity: {max(1.0, recommended_inverter_kw):.1f} kW')
+    doc.add_paragraph(f'• Battery Bank Capacity: {battery_amp_hours:.0f} Ah @ {system_voltage}V')
+    doc.add_paragraph(f'• Recommended DC Cable: {cable_size} (Length: {cable_length}m)')
+
+    doc.add_heading('2. Appliance Load Inventory', level=1)
+    table = doc.add_table(rows=1, cols=4)
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Appliance'
+    hdr_cells[1].text = 'Quantity'
+    hdr_cells[2].text = 'Watts Each'
+    hdr_cells[3].text = 'Hours/Day'
+    
+    for _, row in df.iterrows():
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(row['Appliance'])
+        row_cells[1].text = str(row['Quantity'])
+        row_cells[2].text = str(row['Watts Each'])
+        row_cells[3].text = str(row['Hours Used/Day'])
+        
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
+
+
+class PDFReport(FPDF):
+    def header(self):
+        self.set_font('helvetica', 'B', 14)
+        self.cell(0, 10, 'SolarAI Power Systems Estimator Report', 0, 1, 'C')
+        self.set_font('helvetica', '', 9)
+        self.cell(0, 5, 'Designed by Engr. Bilal Mehmood | Ahmad AI Assistant', 0, 1, 'C')
+        self.ln(8)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
+
+def generate_pdf_report(df, total_daily_kwh, num_panels, panel_wattage, recommended_inverter_kw, battery_amp_hours, system_voltage, cable_size, cable_length):
+    pdf = PDFReport()
+    pdf.add_page()
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, '1. Executive Summary & Hardware Sizing', 0, 1)
+    
+    pdf.set_font('helvetica', '', 10)
+    pdf.cell(0, 6, f'Total Daily Energy Consumption: {total_daily_kwh:.2f} kWh', 0, 1)
+    pdf.cell(0, 6, f'Solar Panels Required: {num_panels} Units ({panel_wattage}W each)', 0, 1)
+    pdf.cell(0, 6, f'Recommended Inverter Capacity: {max(1.0, recommended_inverter_kw):.1f} kW', 0, 1)
+    pdf.cell(0, 6, f'Battery Bank Capacity: {battery_amp_hours:.0f} Ah @ {system_voltage}V', 0, 1)
+    pdf.cell(0, 6, f'Recommended DC Cable: {cable_size} (Length: {cable_length}m)', 0, 1)
+    pdf.ln(5)
+
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, '2. Appliance Load Inventory', 0, 1)
+    
+    pdf.set_font('helvetica', 'B', 9)
+    pdf.cell(70, 7, 'Appliance', 1)
+    pdf.cell(30, 7, 'Qty', 1)
+    pdf.cell(45, 7, 'Watts Each', 1)
+    pdf.cell(45, 7, 'Hours/Day', 1)
+    pdf.ln()
+
+    pdf.set_font('helvetica', '', 9)
+    for _, row in df.iterrows():
+        pdf.cell(70, 6, str(row['Appliance']), 1)
+        pdf.cell(30, 6, str(row['Quantity']), 1)
+        pdf.cell(45, 6, str(row['Watts Each']), 1)
+        pdf.cell(45, 6, str(row['Hours Used/Day']), 1)
+        pdf.ln()
+
+    pdf_output = pdf.output(dest='S')
+    if isinstance(pdf_output, str):
+        pdf_output = pdf_output.encode('latin-1')
+    return io.BytesIO(pdf_output)
+
+
 # --- WELCOME POPUP FOR VISITORS (st.dialog) ---
 @st.dialog("☀️ Welcome to SolarAI Power Systems Estimator!")
 def welcome_popup():
@@ -167,7 +246,6 @@ def welcome_popup():
         st.session_state.welcome_shown = True
         st.rerun()
 
-# Trigger popup once per session
 if "welcome_shown" not in st.session_state:
     st.session_state.welcome_shown = False
 
@@ -221,7 +299,6 @@ with tab_calculator:
     st.markdown("### 🔌 Step 1: Define Your Connected Load Profile")
     st.markdown("Add, edit, or adjust appliances below to compute exact daily energy consumption.")
 
-    # Default Load Data
     if "load_data" not in st.session_state:
         st.session_state.load_data = pd.DataFrame([
             {"Appliance": "LED Lights (5)", "Quantity": 5, "Watts Each": 12, "Hours Used/Day": 6},
@@ -239,7 +316,6 @@ with tab_calculator:
     )
     st.session_state.load_data = edited_loads
 
-    # Perform Calculations
     if not edited_loads.empty:
         df = edited_loads.copy()
         df["Quantity"] = pd.to_numeric(df["Quantity"]).fillna(0)
@@ -253,9 +329,7 @@ with tab_calculator:
         total_daily_wh = df["Daily Watt-Hours"].sum()
         total_daily_kwh = total_daily_wh / 1000.0
 
-        # --- Sizing Logic ---
         recommended_inverter_kw = (max_surge_load * 1.25) / 1000.0
-
         daily_generation_factor = peak_sun_hours * 0.80
         total_panel_watts_required = total_daily_wh / daily_generation_factor if daily_generation_factor > 0 else 0
         num_panels = int(np.ceil(total_panel_watts_required / panel_wattage))
@@ -286,7 +360,6 @@ with tab_calculator:
         st.markdown("---")
         st.markdown("### 📌 Step 2: System Sizing & Hardware Output")
 
-        # Top 4 System Metrics
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric(label="Total Connected Load", value=f"{max_surge_load:,.0f} W")
@@ -299,7 +372,6 @@ with tab_calculator:
 
         st.markdown("### 🔋 Battery Bank & 🛠️ DC Wiring Recommendations")
         
-        # Bottom 3 Specifications
         col5, col6, col7 = st.columns(3)
         with col5:
             st.metric(label="Battery Bank Capacity", value=f"{battery_amp_hours:.0f} Ah @ {system_voltage}V")
@@ -309,10 +381,31 @@ with tab_calculator:
             st.success(f"**Recommended Cable Size:**  \n### {cable_size}  \nType: {cable_type} (Run: {cable_length}m)")
 
         st.markdown("---")
-        if st.button("🚀 Run AI Validation & Optimization Check", type="primary", use_container_width=True):
-            with st.spinner("Ahmad is verifying load metrics and wire specifications..."):
-                time.sleep(1.2)
-            st.toast("System configuration optimized and validated successfully by Ahmad AI!", icon="✅")
+        
+        # --- REPORT DOWNLOAD BUTTONS SECTION ---
+        st.markdown("### 📥 Download Calculation Reports")
+        rep_col1, rep_col2 = st.columns(2)
+
+        docx_data = generate_docx_report(df, total_daily_kwh, num_panels, panel_wattage, recommended_inverter_kw, battery_amp_hours, system_voltage, cable_size, cable_length)
+        pdf_data = generate_pdf_report(df, total_daily_kwh, num_panels, panel_wattage, recommended_inverter_kw, battery_amp_hours, system_voltage, cable_size, cable_length)
+
+        with rep_col1:
+            st.download_button(
+                label="📄 Download Word Report (.docx)",
+                data=docx_data,
+                file_name="SolarAI_Calculation_Report.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
+
+        with rep_col2:
+            st.download_button(
+                label="📑 Download PDF Report (.pdf)",
+                data=pdf_data,
+                file_name="SolarAI_Calculation_Report.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
 
 # ==========================================
 # TAB 2: VISUALIZATIONS
@@ -368,13 +461,11 @@ with tab_chat:
     st.markdown("### 🤖 Ask Ahmad — Your AI Solar Assistant")
     st.markdown(f"Inquire about your system requirements, panel configurations, battery chemistries, or why **{cable_size if 'cable_size' in locals() else 'certain cables'}** were recommended.")
 
-    # Display Chat History
     for message in st.session_state.messages:
         avatar = "👦" if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar):
             st.markdown(message["content"])
 
-    # Chat Input
     if prompt := st.chat_input("Ask Ahmad anything about solar power systems..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
