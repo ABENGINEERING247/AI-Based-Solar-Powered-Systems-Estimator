@@ -12,78 +12,105 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Advanced Custom Styling (CSS & Background) ---
+# --- High-Contrast Yellow Background & Black Text Styling ---
 st.markdown("""
     <style>
-    /* Main App Background - Stylized Gradient */
-    .stApp {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.90) 100%);
-        background-attachment: fixed;
+    /* Global Yellow Background & Black Text */
+    html, body, [data-testid="stAppViewContainer"], .stApp {
+        background-color: #FFDE59 !important; /* Solar Yellow */
+        color: #000000 !important;
+        font-family: 'Segoe UI', Roboto, sans-serif;
     }
 
-    /* Top Banner Header */
+    /* Force All Headers, Paragraphs, Labels, and Span Text to Black */
+    h1, h2, h3, h4, h5, h6, p, span, label, div {
+        color: #000000 !important;
+    }
+
+    /* Top Header Banner */
     .app-header-banner {
-        background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
+        background-color: #000000 !important;
         padding: 25px 30px;
         border-radius: 15px;
-        color: white;
+        color: #FFDE59 !important;
         text-align: center;
         margin-bottom: 25px;
-        box-shadow: 0 6px 20px rgba(255, 140, 0, 0.35);
+        border: 3px solid #000000;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
     }
-    .app-header-banner h1 {
-        margin: 0;
-        font-size: 2.6rem;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-    }
-    .app-header-banner p {
-        margin: 8px 0 0 0;
-        font-size: 1.15rem;
-        opacity: 0.95;
+    .app-header-banner h1, .app-header-banner p, .app-header-banner b {
+        color: #FFDE59 !important;
     }
 
-    /* Animated CSS Avatar for Ahmad (Reliable & Interactive) */
+    /* Sidebar Yellow & Black Theme */
+    [data-testid="stSidebar"] {
+        background-color: #F7D02C !important;
+        border-right: 2px solid #000000;
+    }
+
+    /* Animated CSS Avatar Container */
     .ahmad-sidebar-container {
         text-align: center;
         margin-bottom: 20px;
-        border-bottom: 2px solid #E2E8F0;
+        border-bottom: 2px solid #000000;
         padding-bottom: 20px;
     }
     .animated-avatar-box {
         width: 110px;
         height: 110px;
         margin: 0 auto;
-        background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
-        border: 4px solid #FF8C00;
+        background-color: #FFFFFF;
+        border: 4px solid #000000;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3.2rem;
-        box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         animation: pulseAvatar 2s infinite ease-in-out;
     }
     @keyframes pulseAvatar {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.5); }
-        50% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(255, 140, 0, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
     }
     .ahmad-label {
         margin-top: 12px;
         font-weight: 800;
-        color: #2D3748;
-        font-size: 1.2rem;
+        color: #000000 !important;
+        font-size: 1.3rem;
     }
     .ahmad-sublabel {
-        font-size: 0.85rem;
-        color: #718096;
+        font-size: 0.9rem;
+        color: #000000 !important;
+        font-weight: 600;
     }
 
-    /* Global Metric Card Styling */
+    /* Metric Cards Styling */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF !important;
+        border: 2px solid #000000 !important;
+        border-radius: 10px;
+        padding: 12px;
+    }
     div[data-testid="stMetricValue"] {
-        color: #FF8C00;
-        font-weight: 700;
+        color: #000000 !important;
+        font-weight: 900 !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Tables & Inputs Styling */
+    .stDataFrame, div[data-baseweb="select"], div[data-baseweb="input"] {
+        border: 1px solid #000000 !important;
+    }
+
+    /* Tabs Styling */
+    button[data-baseweb="tab"] {
+        color: #000000 !important;
+        font-weight: 700 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -95,8 +122,8 @@ def welcome_popup():
     col1, col2 = st.columns([1, 2])
     with col1:
         st.markdown("""
-            <div style="text-align: center; padding: 20px;">
-                <div style="font-size: 5rem; animation: bounce 1.5s infinite;">👦</div>
+            <div style="text-align: center; padding: 10px;">
+                <div style="font-size: 5rem;">👦</div>
             </div>
         """, unsafe_allow_html=True)
     with col2:
@@ -134,7 +161,6 @@ if "messages" not in st.session_state:
 
 # --- Sidebar: AHMAD Character & Configuration ---
 with st.sidebar:
-    # Animated CSS Avatar Component
     st.markdown("""
         <div class="ahmad-sidebar-container">
             <div class="animated-avatar-box">👦</div>
@@ -275,7 +301,12 @@ with tab_visualization:
                 hole=0.4,
                 color_discrete_sequence=px.colors.sequential.YlOrRd_r
             )
-            fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+            fig_pie.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="#000000"),
+                margin=dict(t=0, b=0, l=0, r=0)
+            )
             st.plotly_chart(fig_pie, use_container_width=True)
 
         with col_b:
@@ -288,7 +319,13 @@ with tab_visualization:
                 text="Total Watts",
                 color_discrete_sequence=px.colors.sequential.Plasma
             )
-            fig_bar.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
+            fig_bar.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="#000000"),
+                showlegend=False, 
+                margin=dict(t=0, b=0, l=0, r=0)
+            )
             st.plotly_chart(fig_bar, use_container_width=True)
     else:
         st.info("Please add appliances in the Load Calculator tab to view analytics.")
